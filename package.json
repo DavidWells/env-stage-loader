@@ -1,0 +1,16 @@
+{
+  "name": "smart-env",
+  "version": "1.0.0",
+  "description": "Load .env files with [stage].local support",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "DavidWells",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "dotenv-expand": "^5.1.0"
+  }
+}
