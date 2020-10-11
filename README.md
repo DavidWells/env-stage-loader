@@ -1,6 +1,6 @@
-# Smart Env loader
+# Env Stage Loader
 
-Loads `.env` files in order
+Loads `.env` files in order based on `process.env.NODE_ENV` value.
 
 1. shell
 2. .env.{environment}.local
