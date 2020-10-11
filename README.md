@@ -15,13 +15,13 @@ If environment variable is set, any file loaded after will not override it.
 Import and use asap in your build process or app
 
 ```js
-const smartEnv = require('smart-env')
+const loadStageEnv = require('env-stage-loader')
 
 // Load env variables
-smartEnv()
+loadStageEnv()
 
 // Debug load order & value setting
-smartEnv({ debug: true })
+loadStageEnv({ debug: true })
 ```
 
 ## Examples
