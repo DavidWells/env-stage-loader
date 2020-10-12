@@ -62,3 +62,7 @@ Files on the left have more priority than files on the right:
 These variables will act as the defaults if the machine does not explicitly set them.
 
 Please refer to the [dotenv documentation](https://github.com/motdotla/dotenv) for more details.
+
+## Other Projects
+
+Checkout [dotenv-flow](https://github.com/kerimdzhanov/dotenv-flow) if this pkg won't work for ya
