@@ -10,12 +10,25 @@ const dotEnv = require('dotenv')
 const dotEnvExpand = require('dotenv-expand')
 const { NODE_ENV } = process.env
 
-function smartEnv(config = {}) {
-  if (!NODE_ENV) {
+function envStageLoader(config = {}) {
+  const { debug, forceSet } = config
+  const debugLogger = logger(debug)
+  if (config.env) {
+    debugLogger(`NODE_ENV set from "env" config value, using instead of process.env.NODE_ENV`)
+  }
+  if (config.defaultEnv) {
+    debugLogger(`NODE_ENV set from "defaultEnv" config value, using instead of process.env.NODE_ENV`)
+  }
+
+  const nodeEnv = config.env || NODE_ENV || config.defaultEnv
+
+  if (!nodeEnv) {
     throw new Error('The NODE_ENV environment variable is required but was not specified.');
   }
-  const { debug, forceSet } = config
-  const directory = fs.realpathSync(process.cwd())
+
+  const envPath = config.path || process.cwd()
+
+  const directory = fs.realpathSync(envPath)
   const dotEnvPath = path.resolve(directory, '.env')
 
   /* .env presidence order */
@@ -35,14 +48,20 @@ function smartEnv(config = {}) {
   https://github.com/bkeepers/dotenv#what-other-env-files-can-i-use
   */
 
-  if (debug) {
-    console.log('Attempting to load these config files')
-    console.log(dotenvFiles)
+  debugLogger('Attempting to load these config files')
+  debugLogger(dotenvFiles)
+
+  // Unset previously set values for dotenv conflicts
+  if (options.unloadEnv && fs.existsSync(dotEnvPath))
+    debugLogger(`[dotenv][DEBUG] Load file ${dotenvFile}`)
+    unload(dotEnvPath, { encoding })
   }
 
+  /* Loop over env files and set values found */
   dotenvFiles.forEach((dotenvFile) => {
     if (fs.existsSync(dotenvFile)) {
-      if (debug) console.log(`[dotenv][DEBUG] Load file ${dotenvFile}`)
+      debugLogger(`[dotenv][DEBUG] Load file ${dotenvFile}`)
+
       dotEnvExpand(dotEnv.config({
         path: dotenvFile,
         debug: debug
@@ -53,11 +72,9 @@ function smartEnv(config = {}) {
   const overrides = Object.keys(forceSet)
   if (Object.keys(overrides).length) {
     overrides.forEach((key) => {
-      if (debug) {
-        console.log(`[dotenv][DEBUG] OVERRIDE process.env.${key}`)
-        if (process.env[key]) {
-          console.log(`[dotenv][DEBUG] process.env.${key} overriden by smartEnv forceSet`)
-        }
+      debugLogger(`[dotenv][DEBUG] OVERRIDE process.env.${key}`)
+      if (process.env[key]) {
+        debugLogger(`[dotenv][DEBUG] process.env.${key} overriden by envStageLoader forceSet`)
       }
       process.env[key] = forceSet[key]
     })
@@ -65,4 +82,21 @@ function smartEnv(config = {}) {
   // @TODO return set values?
 }
 
-module.exports = smartEnv
+const noOp = () => {}
+
+function logger(debug) {
+  if (!debug) return noOp
+  return console.log
+}
+
+function unload(filenames, options = {}) {
+  const parsed = parse(filenames, options);
+
+  Object.keys(parsed).forEach((key) => {
+    if (process.env[key] === parsed[key]) {
+      delete process.env[key];
+    }
+  })
+}
+
+module.exports = envStageLoader
