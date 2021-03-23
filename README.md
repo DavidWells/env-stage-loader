@@ -18,7 +18,8 @@ Import and use asap in your build process or app
 const loadStageEnv = require('env-stage-loader')
 
 // Load env variables
-loadStageEnv()
+const values = loadStageEnv()
+console.log('resolved values', values)
 
 // Debug load order & value setting
 loadStageEnv({ debug: true })
@@ -33,6 +34,13 @@ loadStageEnv({
   forceSet: {
     FOO: 'this value will win'
   }
+})
+
+// Force override of any env variable
+loadStageEnv({
+  env: 'development'
+  // Force unsetting of all previously found ENV vars found in shell
+  unloadEnv: true
 })
 ```
 
