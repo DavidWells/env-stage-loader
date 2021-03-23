@@ -4,7 +4,11 @@
   "description": "Loads `.env` files in order based on `process.env.NODE_ENV` value with [stage].local support",
   "main": "index.js",
   "scripts": {
-    "test": "ava ./tests/*.test.js -v"
+    "test": "ava ./tests/*.test.js -v",
+    "publish": "git push origin && git push origin --tags",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish"
   },
   "files": [
     "index.js",
