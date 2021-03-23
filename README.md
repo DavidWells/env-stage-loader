@@ -15,13 +15,25 @@ If environment variable is set, any file loaded after will not override it.
 Import and use asap in your build process or app
 
 ```js
-const smartEnv = require('smart-env')
+const loadStageEnv = require('env-stage-loader')
 
 // Load env variables
-smartEnv()
+loadStageEnv()
 
 // Debug load order & value setting
-smartEnv({ debug: true })
+loadStageEnv({ debug: true })
+
+// Set env dynamically
+loadStageEnv({
+  env: 'development'
+})
+
+// Force override of any env variable
+loadStageEnv({
+  forceSet: {
+    FOO: 'this value will win'
+  }
+})
 ```
 
 ## Examples
@@ -62,3 +74,7 @@ Files on the left have more priority than files on the right:
 These variables will act as the defaults if the machine does not explicitly set them.
 
 Please refer to the [dotenv documentation](https://github.com/motdotla/dotenv) for more details.
+
+## Other Projects
+
+Checkout [dotenv-flow](https://github.com/kerimdzhanov/dotenv-flow) if this pkg won't work for ya

@@ -2,28 +2,33 @@
 Load environment variables from .env* files.
 dotenv will never modify any environment variables that have already been set.
 */
-const path = require('path')
 const fs = require('fs')
+const path = require('path')
 /* https://github.com/motdotla/dotenv */
 const dotEnv = require('dotenv')
 /* https://github.com/motdotla/dotenv-expand */
 const dotEnvExpand = require('dotenv-expand')
-const { NODE_ENV } = process.env
 
 function envStageLoader(config = {}) {
-  const { debug, forceSet } = config
+  const { debug, forceSet, unloadEnv, ignoreFiles, silent } = config
   const debugLogger = logger(debug)
   if (config.env) {
     debugLogger(`NODE_ENV set from "env" config value, using instead of process.env.NODE_ENV`)
   }
-  if (config.defaultEnv) {
+  if (!process.env.NODE_ENV && !config.env && config.defaultEnv) {
     debugLogger(`NODE_ENV set from "defaultEnv" config value, using instead of process.env.NODE_ENV`)
   }
 
-  const nodeEnv = config.env || NODE_ENV || config.defaultEnv
+  const nodeEnv = config.env || process.env.NODE_ENV || config.defaultEnv
 
   if (!nodeEnv) {
-    throw new Error('The NODE_ENV environment variable is required but was not specified.');
+    throw new Error(`
+  The config.env, config.defaultEnv or process.env.NODE_ENV environment variable is required but none was not specified.
+    `)
+  }
+
+  if (!silent) {
+    console.log(`[dotenv] Loading "${nodeEnv}" environment values`)
   }
 
   const envPath = config.path || process.cwd()
@@ -32,17 +37,27 @@ function envStageLoader(config = {}) {
   const dotEnvPath = path.resolve(directory, '.env')
 
   /* .env presidence order */
-  const dotenvFiles = [
+  let dotenvFiles = [
     /* 1. .env.[stage].local */
-    `${dotEnvPath}.${NODE_ENV}.local`,
+    `${dotEnvPath}.${nodeEnv}.local`,
     /* 2. (unless NODE_ENV === test) .env.local */
-    NODE_ENV !== 'test' && `${dotEnvPath}.local`,
+    nodeEnv !== 'test' && `${dotEnvPath}.local`,
     /* 3. .env.[stage] */
-    `${dotEnvPath}.${NODE_ENV}`,
+    `${dotEnvPath}.${nodeEnv}`,
     /* 4. .env */
     dotEnvPath,
   ].filter(Boolean)
 
+  /* if config.ignoreFiles array set, exclude those files from loading */
+  if (ignoreFiles) {
+    dotenvFiles = dotenvFiles.filter((file) => !ignoreFiles.includes(path.basename(file)))
+  }
+
+  // Filter to down to existing files only
+  dotenvFiles = dotenvFiles.filter((file) => {
+    return fs.existsSync(file)
+  })
+  
   /*
   For more on load order see:
   https://github.com/bkeepers/dotenv#what-other-env-files-can-i-use
@@ -52,34 +67,49 @@ function envStageLoader(config = {}) {
   debugLogger(dotenvFiles)
 
   // Unset previously set values for dotenv conflicts
-  if (options.unloadEnv && fs.existsSync(dotEnvPath))
-    debugLogger(`[dotenv][DEBUG] Load file ${dotenvFile}`)
-    unload(dotEnvPath, { encoding })
+  if (unloadEnv) {
+    dotenvFiles.forEach((dotenvFile) => {
+      debugLogger(`[dotenv][DEBUG] Unload file values ${dotenvFile}`)
+      // unload(dotEnvPath, { encoding })
+      unload(dotenvFile, {
+        ...config,
+        debugLogger
+      })
+    })
   }
 
-  /* Loop over env files and set values found */
-  dotenvFiles.forEach((dotenvFile) => {
-    if (fs.existsSync(dotenvFile)) {
-      debugLogger(`[dotenv][DEBUG] Load file ${dotenvFile}`)
+  let resolvedValues = {}
 
-      dotEnvExpand(dotEnv.config({
-        path: dotenvFile,
-        debug: debug
-      }))
+  /* Loop over env files and set values found */
+  dotenvFiles.forEach((dotenvFile, i) => {
+    if (!silent) {
+      console.log(`[dotenv]   ${i + 1}. Loading "${dotenvFile}" config file values to ENV`)
+    }
+    debugLogger(`[dotenv][DEBUG] Load file ${dotenvFile}`)
+
+    const values = dotEnvExpand(dotEnv.config({
+      path: dotenvFile,
+      debug: debug
+    }))
+    // Assign resolved values
+    if (values && values.parsed) {
+      resolvedValues = Object.assign({}, resolvedValues, values.parsed)
     }
   })
 
-  const overrides = Object.keys(forceSet)
+  const forceOverrides = forceSet || {}
+  const overrides = Object.keys(forceOverrides)
   if (Object.keys(overrides).length) {
     overrides.forEach((key) => {
-      debugLogger(`[dotenv][DEBUG] OVERRIDE process.env.${key}`)
       if (process.env[key]) {
-        debugLogger(`[dotenv][DEBUG] process.env.${key} overriden by envStageLoader forceSet`)
+        debugLogger(`[dotenv][DEBUG] process.env.${key} overriden by envStageLoader forceSet value`)
       }
-      process.env[key] = forceSet[key]
+      process.env[key] = forceOverrides[key]
+      resolvedValues[key] = forceOverrides[key]
     })
   }
-  // @TODO return set values?
+
+  return resolvedValues
 }
 
 const noOp = () => {}
@@ -89,14 +119,22 @@ function logger(debug) {
   return console.log
 }
 
-function unload(filenames, options = {}) {
-  const parsed = parse(filenames, options);
+/* Unset previously set env variables */
+function unload(file, options = {}) {
+  const values = dotEnvExpand(dotEnv.config({
+    path: file,
+    debug: options.debug
+  }))
 
-  Object.keys(parsed).forEach((key) => {
-    if (process.env[key] === parsed[key]) {
-      delete process.env[key];
-    }
-  })
+  if (values && values.parsed) {
+    Object.keys(values.parsed).forEach((key) => {
+      if (process.env[key] === values.parsed[key]) {
+        options.debugLogger('[dotenv][DEBUG] Unset key', key)
+        // Unset keys
+        delete process.env[key];
+      }
+    })
+  }
 }
 
 module.exports = envStageLoader
