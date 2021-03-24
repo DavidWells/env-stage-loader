@@ -46,27 +46,57 @@ loadStageEnv({
 
 ## Examples
 
-**Example:**
+**[stage].local takes presidence**
 
-```
+```js
+/*
 .env.dev.local contains FOO=BAR
 .env.dev contains FOO=ZAZ
+*/
 
-process.env.FOO === BAR from .env.dev.local
+const values = loadStageEnv({ env: 'dev' })
+
+console.log(values.FOO === process.env.FOO)
+console.log(process.env.FOO)
+// value "BAR" from .env.dev.local
 ```
 
-**Example Two:**
+**shell takes presidence**
 
+```js
+/*
+process.env.XYZ === '123'
+.env.dev.local contains XYZ=345
+.env.dev contains XYZ=987
+*/
+
+const values = loadStageEnv({ env: 'dev' })
+
+console.log(process.env.XYZ)
+// value "123" from original shell process
 ```
+
+Another shell example
+
+```bash
 # Shell value set
 export FOO=1
-
-.env contains FOO=ZAZ
-
-process.env.FOO === 1
-# because shell takes precedence
-# Also values are never overridden if already set
 ```
+
+FOO is set in shell session...
+
+```js
+/*
+.env file contains FOO=ZAZ
+*/
+
+const values = loadStageEnv({ env: 'dev' })
+
+console.log(process.env.FOO)
+// process.env.FOO === "1" because shell takes precedence
+```
+
+Run `tests` for more examples.
 
 ## Typical `.env` files used
 
