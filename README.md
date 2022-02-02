@@ -113,6 +113,7 @@ These variables will act as the defaults if the machine does not explicitly set 
 
 Please refer to the [dotenv documentation](https://github.com/motdotla/dotenv) for more details.
 
-## Other Projects
+## Alternative Packages
 
-Checkout [dotenv-flow](https://github.com/kerimdzhanov/dotenv-flow) if this pkg won't work for ya
+- [dotenv-flow](https://github.com/kerimdzhanov/dotenv-flow)
+- https://www.npmjs.com/package/universal-dotenv
