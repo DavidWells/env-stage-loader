@@ -9,6 +9,8 @@ const dotEnv = require('dotenv')
 /* https://github.com/motdotla/dotenv-expand */
 const dotEnvExpand = require('dotenv-expand')
 
+const LOG_PREFIX = '[dotenv]'
+
 function envStageLoader(config = {}) {
   const { debug, forceSet, unloadEnv, ignoreFiles, silent } = config
   const debugLogger = logger(debug)
@@ -28,7 +30,7 @@ function envStageLoader(config = {}) {
   }
 
   if (!silent) {
-    console.log(`[dotenv] Loading "${nodeEnv}" environment values`)
+    console.log(`${LOG_PREFIX} Loading "${nodeEnv}" environment values`)
   }
 
   const envPath = config.path || process.cwd()
@@ -36,7 +38,7 @@ function envStageLoader(config = {}) {
   const directory = fs.realpathSync(envPath)
   const dotEnvPath = path.resolve(directory, '.env')
 
-  /* .env presidence order */
+  /* .env precedence order */
   let dotenvFiles = [
     /* 1. .env.[stage].local */
     `${dotEnvPath}.${nodeEnv}.local`,
@@ -69,7 +71,7 @@ function envStageLoader(config = {}) {
   // Unset previously set values for dotenv conflicts
   if (unloadEnv) {
     dotenvFiles.forEach((dotenvFile) => {
-      debugLogger(`[dotenv][DEBUG] Unload file values ${dotenvFile}`)
+      debugLogger(`${LOG_PREFIX}[DEBUG] Unload file values ${dotenvFile}`)
       // unload(dotEnvPath, { encoding })
       unload(dotenvFile, {
         ...config,
@@ -83,9 +85,9 @@ function envStageLoader(config = {}) {
   /* Loop over env files and set values found */
   dotenvFiles.forEach((dotenvFile, i) => {
     if (!silent) {
-      console.log(`[dotenv]   ${i + 1}. Loading "${dotenvFile}" config file values to ENV`)
+      console.log(`${LOG_PREFIX}   ${i + 1}. Loading "${dotenvFile}" config file values to ENV`)
     }
-    debugLogger(`[dotenv][DEBUG] Load file ${dotenvFile}`)
+    debugLogger(`${LOG_PREFIX}[DEBUG] Load file ${dotenvFile}`)
 
     const values = dotEnvExpand(dotEnv.config({
       path: dotenvFile,
@@ -102,7 +104,7 @@ function envStageLoader(config = {}) {
   if (Object.keys(overrides).length) {
     overrides.forEach((key) => {
       if (process.env[key]) {
-        debugLogger(`[dotenv][DEBUG] process.env.${key} overriden by envStageLoader forceSet value`)
+        debugLogger(`${LOG_PREFIX}[DEBUG] process.env.${key} overridden by envStageLoader forceSet value`)
       }
       process.env[key] = forceOverrides[key]
       resolvedValues[key] = forceOverrides[key]

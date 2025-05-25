@@ -1,8 +1,11 @@
-const loadStageEnv = require('../index')
+const loadStageEnv = require('./index')
+
+console.log('process.env.REACT_APP_ENV', process.env.REACT_APP_ENV)
 
 // Load env variables
 const values = loadStageEnv({
-  debug: true,
+  silent: true,
+  // debug: true,
   env: 'development',
   // defaultEnv: 'prod',
   forceSet: {
@@ -11,5 +14,5 @@ const values = loadStageEnv({
   // ignoreFiles: ['.env']
 })
 
-console.log(process.env.REACT_APP_ENV)
+console.log('process.env.REACT_APP_ENV', process.env.REACT_APP_ENV)
 console.log('values', values)
