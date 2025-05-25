@@ -1,6 +1,6 @@
 {
   "name": "env-stage-loader",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Loads `.env` files in order based on `process.env.NODE_ENV` value with [stage].local support",
   "main": "index.js",
   "scripts": {
