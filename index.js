@@ -9,10 +9,10 @@ const dotEnv = require('dotenv')
 /* https://github.com/motdotla/dotenv-expand */
 const dotEnvExpand = require('dotenv-expand')
 
-const LOG_PREFIX = '[dotenv]'
+const LOG_PREFIX = '[env-stage-loader]'
 
 function envStageLoader(config = {}) {
-  const { debug, forceSet, unloadEnv, ignoreFiles, silent, required, } = config
+  const { debug, dotEnvDebug, forceSet, unloadEnv, ignoreFiles, silent, required, } = config
   const debugLogger = logger(debug)
   if (config.env) {
     debugLogger(`NODE_ENV set from "env" config value, using instead of process.env.NODE_ENV`)
@@ -91,10 +91,11 @@ function envStageLoader(config = {}) {
 
     const dotEnvConf = {
       path: dotEnvFile,
-      debug: debug
+      debug: dotEnvDebug,
+      quiet: true
     }
 
-    const values = dotEnvExpand(dotEnv.config(dotEnvConf))
+    const values = dotEnvExpand.expand(dotEnv.config(dotEnvConf))
     // Assign resolved values
     if (values && values.parsed) {
       resolvedValues = Object.assign({}, resolvedValues, values.parsed)
@@ -135,15 +136,16 @@ function logger(debug) {
 
 /* Unset previously set env variables */
 function unload(file, options = {}) {
-  const values = dotEnvExpand(dotEnv.config({
+  const values = dotEnvExpand.expand(dotEnv.config({
     path: file,
-    debug: options.debug
+    debug: options.dotEnvDebug,
+    quiet: true
   }))
 
   if (values && values.parsed) {
     Object.keys(values.parsed).forEach((key) => {
       if (process.env[key] === values.parsed[key]) {
-        options.debugLogger('[dotenv][DEBUG] Unset key', key)
+        options.debugLogger(`${LOG_PREFIX}[DEBUG] Unset key`, key)
         // Unset keys
         delete process.env[key];
       }

@@ -4,7 +4,7 @@
   "description": "Loads `.env` files in order based on `process.env.NODE_ENV` value with [stage].local support",
   "main": "index.js",
   "scripts": {
-    "test": "ava ./tests/*.test.js -v",
+    "test": "./run-tests.sh",
     "publish": "git push origin && git push origin --tags",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
@@ -23,10 +23,10 @@
   "author": "DavidWells",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^8.2.0",
-    "dotenv-expand": "^5.1.0"
+    "dotenv": "^17.2.2",
+    "dotenv-expand": "^12.0.3"
   },
   "devDependencies": {
-    "ava": "^3.15.0"
+    "uvu": "^0.5.6"
   }
 }
