@@ -118,3 +118,4 @@ Please refer to the [dotenv documentation](https://github.com/motdotla/dotenv) f
 - [dotenv-flow](https://github.com/kerimdzhanov/dotenv-flow)
 - https://www.npmjs.com/package/universal-dotenv
 - https://github.com/thenativeweb/nodeenv
+- https://github.com/af/envalid
